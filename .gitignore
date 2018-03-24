@@ -17,6 +17,5 @@ cassettes
 # dependencies
 node_modules
 **/dist
-uploads
-log1
+
 config.json

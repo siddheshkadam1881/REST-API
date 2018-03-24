@@ -5,8 +5,15 @@ import express from './services/express'
 import api from './api'
 const app = express(apiRoot, api)
 const server = http.createServer(app)
-var userController=require('./api/user/router/routes.js');
 var bodyParser = require('body-parser');
+// app.use("/upload" , express.static("upload"));
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+var expressValidator = require('express-validator');
+app.use(expressValidator());
+// app.use("/upload" ,express.static("upload"));
+var userController=require('./api/user/router/routes.js');
+app.use(userController);
 
 // var config = require("./api/config");
 // mongoose.connect('mongodb://localhost/register');
@@ -16,7 +23,7 @@ const fileUpload = require('express-fileupload');
 // const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(fileUpload());
+// app.use(fileUpload());
 setImmediate(() => {
   server.listen(port, ip, () => {
     console.log('Express server listening on http://%s:%d, in %s mode', ip, port, env)

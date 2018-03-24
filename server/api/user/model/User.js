@@ -1,15 +1,18 @@
+/****************************
+* @author siddheshwar kadam
+* @version 1.0
+*****************************/
 var mongoose = require('mongoose');
-var bcrypt = require('bcrypt');
  var User = new mongoose.Schema({
   username: {
    type: String,
-   unique: true,
+   // unique: true,
    required: true,
    trim: true
  },
  email: {
    type: String,
-   unique: true,
+   // unique: true,
    required: true,
    trim: true
  },
@@ -22,7 +25,8 @@ var bcrypt = require('bcrypt');
    required: true,
  },
  dob:
-  { type: Date,
+  {
+    type: Date,
     required: true,
   },
  profilePic: {
