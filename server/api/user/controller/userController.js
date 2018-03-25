@@ -31,23 +31,26 @@ exports.Register = function(req, res) {
     upload(req,res,function(err){
 
       var userObj = req.body || {};
-      var file =req.file;
-      console.log(req.file);
+      var file = req.file;
+       console.log(file);
       const params = {
       Bucket: BUCKET_NAME,
       Key: file.originalname,
-      Body: req.file,
+      Body: file.path,
       ACL: 'public-read',
       ContentEncoding: 'base64', // required
       ContentType: `image`
       }
-      // console.log(params);
+       // console.log(params);
       s3.upload(params, (err, data) => {
       if (err) { return console.log(err) }
       // Continue if no error
       // Save data.Location in your database
+      console.log(data);
       console.log('Image successfully uploaded.');
       });
+
+
     //create user
         try {
         req.checkBody("username", "Enter Name.").notEmpty();
@@ -60,11 +63,11 @@ exports.Register = function(req, res) {
         var errors = req.validationErrors();
         if (errors) {
         throw errors;
-            // res.send(errors[0]);
-            // return;
+
         }
         else
         {
+
             var user = new User({
             username: req.body.username,
             email: req.body.email,
