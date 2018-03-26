@@ -2,6 +2,8 @@
 @author siddheshwar kadam
 @version 1.0
 *****************************/
+import * as Parallel from 'async-parallel';
+import { decode } from "base64-arraybuffer";
 var express = require("express");
 var User =  require("../model/User");
 var AWS = require('aws-sdk');
@@ -10,9 +12,9 @@ const s3 = new AWS.S3();
 var BUCKET_NAME = 'fundoo-notes-images';
 var fs = require('fs');
 var multer  = require('multer');
-import * as Parallel from 'async-parallel';
 var async=require('async');
-
+var multiparty = require("multiparty");
+const Buffer = global.Buffer || require('buffer').Buffer;
 var storage =multer.diskStorage({
 destination :function(req,file,callback)
  {
@@ -44,25 +46,32 @@ async.parallel({
   },
   s3Bucket:function (callback) {
     upload(req,res,function(err){
+       // buf = new Buffer(req.file.replace(/^data:image\/\w+;base64,/, ""), 'base64')
 
-      var userObj = req.body || {};
+      // var userObj = req.body || {};
       var file = req.file;
-       console.log(file);
+      console.log(req.file.path);
+      // const base64 = fs.readFile(file.path, "base64");
+      // console.log(base64);
+      // const arrayBuffer = decode(base64);
+     var stream = fs.createReadStream(req.file.path)
       const params = {
       Bucket: BUCKET_NAME,
       Key: file.originalname,
-      Body: file.path,
-      Expires: 60,
+      Body: stream,
       ACL: 'public-read',
       ContentEncoding: 'base64', // required
-      ContentType: `image`
+     'Content-Type': 'image/jpeg'
+
       }
-       console.log(params);
+      console.log(params);
       s3.upload(params, callback);
 
   })
-},function (err,result) {
-if (err)
+},
+  function (err,result) {
+  if (err)
+  console.log(err);
   return res.send({status:false});
   console.log(result.s3Bucket.Location);
 }
