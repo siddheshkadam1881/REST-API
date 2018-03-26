@@ -5,6 +5,7 @@
 import * as Parallel from 'async-parallel';
 import { decode } from "base64-arraybuffer";
 var express = require("express");
+var  validate = require('express-validation');
 var User =  require("../model/User");
 var AWS = require('aws-sdk');
 AWS.config.loadFromPath('./config.json');
@@ -22,6 +23,7 @@ destination :function(req,file,callback)
  },
  filename:function(req,file,callback)
  {
+   file.originalname = Date.now() +"_"+ file.originalname;
    callback(null,file.originalname);
  },
  });
@@ -30,31 +32,40 @@ destination :function(req,file,callback)
 
 
 exports.Register =  function(req, res) {
-async.parallel({
-  doc:function (callback) {
-    var user = new User({
+upload(req,res,function(err){
+  //Validation
+
+      req.checkBody("username", "Enter Name.").notEmpty();
+      req.checkBody("email", "Enter a valid email address.").isEmail();
+      req.checkBody("userpass", "Enter a valid password").matches(/^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$/);
+      req.checkBody("usermobile", "Enter a valid user mobile").matches(/^([7-9]{1}[0-9]{9})$/);
+      req.checkBody("dob",  "Enter date of birthday in DD/MM/YYYY format").matches(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+      async.parallel({
+         doc:function (callback) {
+         console.log(req.body);
+         var user = new User({
          username: req.body.username,
          email: req.body.email,
          userpass: req.body.userpass,
          usermobile: req.body.usermobile,
          dob: req.body.dob
        });
-
        user.save(function (err,doc) {
-         callback(err,doc)
+       callback(err,doc)
        });
   },
   s3Bucket:function (callback) {
-    upload(req,res,function(err){
-       // buf = new Buffer(req.file.replace(/^data:image\/\w+;base64,/, ""), 'base64')
-
-      // var userObj = req.body || {};
+    // upload(req,res,function(err){
+      // console.log(req.body);
       var file = req.file;
-      console.log(req.file.path);
-      // const base64 = fs.readFile(file.path, "base64");
-      // console.log(base64);
-      // const arrayBuffer = decode(base64);
-     var stream = fs.createReadStream(req.file.path)
+      if ( file.mimetype !== 'image/png' && file.mimetype !== 'image/jpg' && file.mimetype !== 'image/jpeg')
+      return res.status(400).send('Supported image files are jpeg, jpg, and png ');
+      // var errors = req.validationErrors();
+      // if (errors) {
+      //  throw errors;
+      //  }
+      var stream = fs.createReadStream(req.file.path)
       const params = {
       Bucket: BUCKET_NAME,
       Key: file.originalname,
@@ -62,19 +73,65 @@ async.parallel({
       ACL: 'public-read',
       ContentEncoding: 'base64', // required
      'Content-Type': 'image/jpeg'
-
       }
       console.log(params);
       s3.upload(params, callback);
-
-  })
+  // })
+}
 },
   function (err,result) {
   if (err)
-  console.log(err);
-  return res.send({status:false});
-  console.log(result.s3Bucket.Location);
-}
+  return res.send({status:false,err:err});
+  result.doc.profilePicurl = result.s3Bucket.Location;
+  result.doc.save(function (err,doc) {
+    if (err) {
+      return res.send({status:false,err:err});
+    }
+    return res.send({status:true,data : doc});
+
+  })
+})
+
+
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* Not required
       if (err) { return console.log(err) }
       // Continue if no error
@@ -135,5 +192,5 @@ async.parallel({
     //         description: "Please fill the correct information"
     //     });
     // }
-    });
+    // });
 };

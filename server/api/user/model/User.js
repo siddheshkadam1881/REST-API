@@ -29,8 +29,8 @@ var mongoose = require('mongoose');
     type: Date,
     required: true,
   },
- profilePic: {
-   data: Buffer
+ profilePicurl: {
+   type:String
 }
 
 });
