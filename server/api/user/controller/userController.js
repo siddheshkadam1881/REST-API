@@ -1,7 +1,9 @@
+
 /****************************
-@author siddheshwar kadam
-@version 1.0
+**  @author siddheshwar kadam
+*** @version 1.0
 *****************************/
+
 import * as Parallel from 'async-parallel';
 import { decode } from "base64-arraybuffer";
 var express = require("express");
@@ -39,7 +41,11 @@ upload(req,res,function(err){
       req.checkBody("email", "Enter a valid email address.").isEmail();
       req.checkBody("userpass", "Enter a valid password").matches(/^(.{0,7}|[^0-9]*|[^A-Z]*|[^a-z]*|[a-zA-Z0-9]*)$/);
       req.checkBody("usermobile", "Enter a valid user mobile").matches(/^([7-9]{1}[0-9]{9})$/);
-      req.checkBody("dob",  "Enter date of birthday in DD/MM/YYYY format").matches(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+      req.checkBody("dob", "Enter date of birthday in DD/MM/YYYY format").matches(/(\d+)(-|\/)(\d+)(?:-|\/)(?:(\d+)\s+(\d+):(\d+)(?::(\d+))?(?:\.(\d+))?)?/);
+      var errors = req.validationErrors();
+       if(errors){
+           res.status(400).json({"errors": errors});
+       }
 
       async.parallel({
          doc:function (callback) {
@@ -61,10 +67,7 @@ upload(req,res,function(err){
       var file = req.file;
       if ( file.mimetype !== 'image/png' && file.mimetype !== 'image/jpg' && file.mimetype !== 'image/jpeg')
       return res.status(400).send('Supported image files are jpeg, jpg, and png ');
-      // var errors = req.validationErrors();
-      // if (errors) {
-      //  throw errors;
-      //  }
+
       var stream = fs.createReadStream(req.file.path)
       const params = {
       Bucket: BUCKET_NAME,
